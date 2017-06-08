@@ -1,0 +1,66 @@
+#!/usr/bin/python3
+
+import subprocess
+import os
+import sys
+import json
+
+script_input = json.loads(sys.stdin.read())
+cluster_url = script_input['source']['cluster_url']
+namespace = script_input['source']['namespace']
+resource_type = script_input['source']['resource_type']
+resource_name = script_input['source']['resource_name']
+image_name = script_input['params']['image_name']
+image_tag = script_input['params']['image_tag']
+
+kubectl_args = [
+    "kubectl",
+    "--server=" + cluster_url,
+    "--namespace=" + namespace,
+]
+
+os.makedirs("/root/.kube", exist_ok=True);
+
+if cluster_url.startswith("https://"):
+    cluster_ca = script_input['source']['cluster_ca']
+    admin_key = script_input['source']['admin_key']
+    admin_cert = script_input['source']['admin_cert']
+
+    ca_path = "/root/.kube/ca.pem"
+    key_path = "/root/.kube/key.pem"
+    cert_path = "/root/.kube/cert.pem"
+
+    with open(ca_path, "w") as f:
+        f.write(cluster_ca)
+
+    with open(key_path, "w") as f:
+        f.write(admin_key)
+
+    with open(cert_path, "w") as f:
+        f.write(admin_cert)
+
+    kubectl_args += [
+        "--certificate-authority=" + ca_path,
+        "--client-key=" + key_path,
+        "--client-certificate=" + cert_path,
+    ]
+
+img = "{}:{}".format(image_name, image_tag)
+
+if resource_type == "deployment":
+    kubectl_args += [
+        "set",
+        "image",
+        "deployment/" + resource_name,
+        "{}={}".format(resource_name, img),
+    ]
+    subprocess.check_call(kubectl_args, stdout=sys.stderr)
+else:
+    raise Exception("Unsupported resource_type: " + resource_type)
+
+result = {
+    "version": {
+        "container": img,
+    },
+}
+sys.stdout.write(json.dumps(result))
