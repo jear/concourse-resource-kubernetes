@@ -10,6 +10,7 @@ cluster_url = script_input['source']['cluster_url']
 namespace = script_input['source']['namespace']
 resource_type = script_input['source']['resource_type']
 resource_name = script_input['source']['resource_name']
+container_name = script_input['source']['container_name']
 image_name = script_input['params']['image_name']
 image_tag = script_input['params']['image_tag']
 
@@ -52,7 +53,7 @@ if resource_type == "deployment":
         "set",
         "image",
         "deployment/" + resource_name,
-        "{}={}".format(resource_name, img),
+        "{}={}".format(container_name, img),
     ]
     subprocess.check_call(kubectl_args, stdout=sys.stderr)
 else:
