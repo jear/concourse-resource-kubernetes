@@ -1,2 +1,59 @@
 #!/usr/bin/python3
-raise Exception("Resource in direction not supported.")
+
+import subprocess
+import os
+import sys
+import json
+
+script_input = json.loads(sys.stdin.read())
+cluster_url = script_input['source']['cluster_url']
+namespace = script_input['source']['namespace']
+resource_type = script_input['source']['resource_type']
+resource_name = script_input['source']['resource_name']
+
+kubectl_args = [
+    "kubectl",
+    "--server=" + cluster_url,
+    "--namespace=" + namespace,
+]
+
+os.makedirs("/root/.kube", exist_ok=True);
+
+if cluster_url.startswith("https://"):
+    cluster_ca = script_input['source']['cluster_ca']
+    admin_key = script_input['source']['admin_key']
+    admin_cert = script_input['source']['admin_cert']
+
+    ca_path = "/root/.kube/ca.pem"
+    key_path = "/root/.kube/key.pem"
+    cert_path = "/root/.kube/cert.pem"
+
+    with open(ca_path, "w") as f:
+        f.write(cluster_ca)
+
+    with open(key_path, "w") as f:
+        f.write(admin_key)
+
+    with open(cert_path, "w") as f:
+        f.write(admin_cert)
+
+    kubectl_args += [
+        "--certificate-authority=" + ca_path,
+        "--client-key=" + key_path,
+        "--client-certificate=" + cert_path,
+    ]
+
+kubectl_args += [
+    "get",
+    "-o", "json",
+    "{}/{}".format(resource_type, resource_name),
+]
+kube_info = json.loads(subprocess.check_output(kubectl_args))
+img = kube_info['spec']['template']['spec']['containers'][0]['image']
+
+result = {
+    "version": {
+        "container": img,
+    },
+}
+sys.stdout.write(json.dumps(result))
