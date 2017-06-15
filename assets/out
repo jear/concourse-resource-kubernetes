@@ -12,7 +12,7 @@ resource_type = script_input['source']['resource_type']
 resource_name = script_input['source']['resource_name']
 container_name = script_input['source']['container_name']
 image_name = script_input['params']['image_name']
-image_tag = script_input['params']['image_tag']
+image_tag_file = script_input['params']['image_tag_file']
 
 kubectl_args = [
     "kubectl",
@@ -46,6 +46,7 @@ if cluster_url.startswith("https://"):
         "--client-certificate=" + cert_path,
     ]
 
+image_tag = open(image_tag_file).read()
 img = "{}:{}".format(image_name, image_tag)
 
 if resource_type == "deployment":
