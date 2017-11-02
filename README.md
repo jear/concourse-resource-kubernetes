@@ -30,5 +30,5 @@ jobs:
   - put: kubernetes-staging
     params:
       image_name: my-image
-      image_tag: latest
+      image_tag_file: latest
 ```
