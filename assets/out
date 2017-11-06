@@ -48,7 +48,7 @@ if cluster_url.startswith("https://"):
         "--client-certificate=" + cert_path,
     ]
 
-image_tag = open(image_tag_file).read()
+image_tag = open(image_tag_file).read().strip()
 img = "{}:{}".format(image_name, image_tag)
 
 if resource_type == "deployment":
