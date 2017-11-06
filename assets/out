@@ -49,7 +49,7 @@ if cluster_url.startswith("https://"):
     ]
 
 image_tag = open(image_tag_file).read().strip()
-img = "{}:{}".format(image_name, image_tag)
+img = "{}@{}".format(image_name, image_tag)
 
 if resource_type == "deployment":
     kubectl_args += [
